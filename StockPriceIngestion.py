@@ -21,6 +21,7 @@ yesterday = datetime.date.today() - datetime.timedelta(2)
 
 ## Add code to pull the data for the stocks specified in the doc
 stocksource = ["MSFT", "MVIS", "GOOG", "SPOT", "INO", "OCGN", "ABML", "RLLCF", "JNJ", "PSFE"]
+#stocksource = ["MSFT"]
 
 def dict_to_binary(the_dict):
     str = json.dumps(the_dict)
@@ -47,18 +48,20 @@ for eachsource in stocksource:
 	## Add your code here to push data records to Kinesis stream.
 	## Prepare the daata
 	for eachrow in data:
-		df_list["StockID"]=str(uuid.uuid4());
-		df_list["timestamp"]=eachrow['Date'];
-		df_list["price"]=eachrow['Open'];
-		df_list["52WeekHigh"]=info['fiftyTwoWeekHigh'];
-		df_list["52WeekLow"]=info['fiftyTwoWeekLow'];
+		payload = {
+            "stockid": str(uuid.uuid4()),
+            "timestamp": str(eachrow['Date']),
+            "price": eachrow['Open'],
+            "52WeekHigh":info['fiftyTwoWeekHigh'],
+            "52WeekLow":info['fiftyTwoWeekLow']
+        }
 		print("Inserting..\n")
-		print(df_list)
+		print(payload)
 		# push to Kinesis
 		response = kinesis.put_record(
 		    StreamName='StockDataStream',
-		    Data=dict_to_binary(df_list),
-		    PartitionKey='StockID',
+		    Data=json.dumps(payload),
+		    PartitionKey='stockid',
 		)
 		print("\nKinesis Response ..\n")
 		print(response)
